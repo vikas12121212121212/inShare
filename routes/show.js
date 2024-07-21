@@ -12,7 +12,7 @@ router.get('/:uuid',async(req,res) =>{
             uuid: file.uuid,
             fileName: file.filename,
             fileSize: file.size,
-            download: `${process.env.APP_BASE_URL}/files/download/${file.uuid}`
+            download: `${process.env.APP_BASE_URL}/files/${file.uuid}`
             // http://localhost:3000/files/download/234534656fytjfy
         });
     }catch(err) {
