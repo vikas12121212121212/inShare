@@ -10,7 +10,7 @@ router.get('/:uuid', async (req, res) => {
         }
 
         const filePath = path.resolve(file.path); // Resolve file path
-        res.download(filePath, file.originalname); // Send file as attachment with original filename
+        res.download(filePath, file.filename); // Send file as attachment with original filename
     } catch (err) {
         console.error(err);
         res.status(500).send('Internal Server Error');
@@ -18,4 +18,5 @@ router.get('/:uuid', async (req, res) => {
 });
 
 module.exports = router;
+
 
