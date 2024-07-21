@@ -1,3 +1,4 @@
+
 const express = require('express');
 const app = express();
 const path = require('path');
@@ -32,6 +33,11 @@ app.set('view engine', 'ejs');
 app.use('/api/files', require('./routes/files'));
 app.use('/files', require('./routes/show'));
 app.use('/files/download', require('./routes/download'));
+
+// Root path route handler
+app.get('/', (req, res) => {
+    res.send('Welcome to the File Sharing App'); // Or render a view using res.render('index');
+});
 
 // Start the server
 app.listen(PORT, () => {
