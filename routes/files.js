@@ -40,7 +40,7 @@ router.post('/', (req, res) => {
 
         try {
             const response = await file.save();
-            return res.json({ file: `${process.env.APP_BASE_URL.replace(/\/+$/, '')}files/${response.uuid}` });
+            return res.json({ file: `${process.env.APP_BASE_URL.replace(/\/+$/, '')}/files/${response.uuid}` });
 
         } catch (error) {
             return res.status(500).send({ error: error.message });
