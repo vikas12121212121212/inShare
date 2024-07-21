@@ -13,7 +13,7 @@ router.get('/:uuid', async (req, res) => {
         }
 
         // Construct the full file path
-        const filePath = path.resolve(__dirname, '../', file.path);
+        const filePath = `${__dirname}/../${file.path}`;
 
         // Send file for download
         res.download(filePath, file.filename, (err) => {
