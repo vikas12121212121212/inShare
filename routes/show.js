@@ -1,24 +1,26 @@
 const router = require('express').Router();
 const File = require('../models/file');
+const path = require('path');
 
-router.get('/:uuid',async(req,res) =>{
-    try{
+router.get('/:uuid', async (req, res) => {
+    try {
         const file = await File.findOne({ uuid: req.params.uuid });
-        if(!file){
-            return res.render('download.ejs',{ error: 'Link has been expired.'});
+        if (!file) {
+            return res.render('download.ejs', { error: 'Link has expired.' });
         }
 
-        return res.render('download.ejs',{
-            uuid: file.uuid,
+        const filePath = path.resolve(file.path); // Make sure this resolves to the correct file location
+        console.log(`File path: ${filePath}`); // Debugging line
+
+        return res.render('download.ejs', {
             fileName: file.filename,
             fileSize: file.size,
             download: `${process.env.APP_BASE_URL}/files/${file.uuid}`
-            // http://localhost:3000/files/download/234534656fytjfy
         });
-    }catch(err) {
-        return res.render('download.ejs',{ error: 'Something went wrong.'});
+    } catch (err) {
+        console.error(err);
+        return res.render('download.ejs', { error: 'Something went wrong.' });
     }
-    
 });
 
 module.exports = router;
