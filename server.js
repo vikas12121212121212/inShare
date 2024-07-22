@@ -1,28 +1,40 @@
 const express = require('express');
-const app = express();
 const path = require('path');
-const PORT = process.env.PORT || 3000;
 const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
+const dotenv = require('dotenv-safe');
 
-// Load environment variables from .env file
-require('dotenv').config();
+dotenv.config();
 
-// Serve static files from the 'public' directory
-app.use(express.static('public'));
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Middleware to enhance security
+app.use(helmet());
+
+// Middleware for logging
+app.use(morgan('combined'));
+
+// Serve static files from the 'public' directory with caching
+app.use(express.static('public', { maxAge: '1d' }));
 
 // Middleware to parse JSON bodies
 app.use(express.json());
 
 // CORS options
 const corsOptions = {
-    origin: process.env.ALLOWED_CLIENTS ? process.env.ALLOWED_CLIENTS.split(',') : []
+    origin: process.env.ALLOWED_CLIENTS ? process.env.ALLOWED_CLIENTS.split(',') : [],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    preflightContinue: false,
+    optionsSuccessStatus: 204
 };
-
-// Log the CORS options for debugging
-console.log('CORS Options:', corsOptions);
 
 // Use CORS middleware
 app.use(cors(corsOptions));
+
+// Log the CORS options for debugging
+console.log('CORS Options:', corsOptions);
 
 // Connect to the database
 const connectDB = require('./config/db');
@@ -39,7 +51,13 @@ app.use('/files/download', require('./routes/download'));
 
 // Root path route handler
 app.get('/', (req, res) => {
-    res.send('Welcome to the File Sharing App'); // Or render a view using res.render('index');
+    res.send('Welcome to the File Sharing App');
+});
+
+// Centralized error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).send('Something broke!');
 });
 
 // Start the server
