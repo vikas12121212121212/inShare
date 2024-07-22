@@ -71,7 +71,7 @@ router.post('/send', async (req, res) => {
         await file.save();
 
         // Construct the download URL
-        const downloadUrl = `${process.env.APP_BASE_URL.replace(/\/+$/, '')}/files/download/${file.uuid}`;
+        const download = `${process.env.APP_BASE_URL.replace(/\/+$/, '')}/files/download/${file.uuid}`;
         
         // Log email details
         console.log(`Sending email to ${emailTo} from ${emailFrom}`);
