@@ -1,4 +1,4 @@
-module.exports = ({emailFrom, download, size, expires}) => {
+module.exports = ({emailFrom, downloadLink, size, expires}) => {
     return `
         <!doctype html>
             <html>
