@@ -1,4 +1,3 @@
-
 const express = require('express');
 const app = express();
 const path = require('path');
@@ -19,6 +18,10 @@ const corsOptions = {
     origin: process.env.ALLOWED_CLIENTS ? process.env.ALLOWED_CLIENTS.split(',') : []
 };
 
+// Log the CORS options for debugging
+console.log('CORS Options:', corsOptions);
+
+// Use CORS middleware
 app.use(cors(corsOptions));
 
 // Connect to the database
