@@ -49,43 +49,54 @@ router.post('/', (req, res) => {
 });
 
 router.post('/send', async (req, res) => {
-    
-
-    // Validate req
     const { uuid, emailTo, emailFrom } = req.body;
 
+    // Validate request
     if (!uuid || !emailTo || !emailFrom) {
         return res.status(422).send({ error: 'All fields are required.' });
     }
 
-    // Get data from database
-    const file = await File.findOne({ uuid: uuid });
-    if (file.sender) {
-        return res.status(422).send({ error: 'Email already send.' });
-    }
-    file.sender = emailFrom;
-    file.receiver = emailTo; // Corrected assignment
-    const response = await file.save();
-
-    // Send Email
     try {
+        // Get data from database
+        const file = await File.findOne({ uuid });
+        if (!file) {
+            return res.status(404).send({ error: 'File not found.' });
+        }
+        if (file.sender) {
+            return res.status(422).send({ error: 'Email already sent.' });
+        }
+
+        file.sender = emailFrom;
+        file.receiver = emailTo; // Corrected assignment
+        await file.save();
+
+        // Construct the download URL
+        const downloadUrl = `${process.env.APP_BASE_URL.replace(/\/+$/, '')}/files/download/${file.uuid}`;
+        
+        // Log email details
+        console.log(`Sending email to ${emailTo} from ${emailFrom}`);
+        console.log(`Download URL: ${downloadUrl}`);
+
+        // Send Email
         await sendMail({
             from: emailFrom,
             to: emailTo,
             subject: 'inShare file sharing',
             text: `${emailFrom} shared a file with you.`,
             html: require('../services/emailTemplate')({
-                emailFrom: emailFrom,
-                download: `${process.env.APP_BASE_URL.replace(/\/+$/, '')}/files/download/${file.uuid}`,
+                emailFrom,
+                download: downloadUrl,
                 size: parseInt(file.size / 1000) + ' KB',
                 expires: '24 hours'
             })
         });
+
         return res.send({ success: true });
     } catch (error) {
-        console.error(error);
+        console.error('Error sending email:', error.message);
         return res.status(500).send({ error: 'Failed to send email.' });
     }
 });
+
 
 module.exports = router;
