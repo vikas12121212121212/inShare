@@ -5,6 +5,7 @@ const File = require('../models/file');
 const { v4: uuidv4 } = require('uuid');
 const sendMail = require('../services/emailService'); // Import the sendMail function from your email service
 
+// Multer storage configuration
 let storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, 'uploads/'),
     filename: (req, file, cb) => {
@@ -13,24 +14,23 @@ let storage = multer.diskStorage({
     },
 });
 
+// Multer setup for file uploads
 let upload = multer({
     storage,
-    limits: { fileSize: 1000000 * 100 },
+    limits: { fileSize: 1000000 * 100 }, // Limit set to 100 MB
 }).single('myfile');
 
+// Route for uploading files
 router.post('/', (req, res) => {
     upload(req, res, async (err) => {
-        // Handle upload error
         if (err) {
             return res.status(500).send({ error: err.message });
         }
 
-        // Validate request
         if (!req.file) {
-            return res.json({ error: 'All fields are required.' });
+            return res.status(400).send({ error: 'No file uploaded.' });
         }
 
-        // Store to Database
         const file = new File({
             filename: req.file.filename,
             uuid: uuidv4(),
@@ -41,23 +41,21 @@ router.post('/', (req, res) => {
         try {
             const response = await file.save();
             return res.json({ file: `${process.env.APP_BASE_URL.replace(/\/+$/, '')}/files/${response.uuid}` });
-
         } catch (error) {
             return res.status(500).send({ error: error.message });
         }
     });
 });
 
+// Route for sending email with file link
 router.post('/send', async (req, res) => {
     const { uuid, emailTo, emailFrom } = req.body;
 
-    // Validate request
     if (!uuid || !emailTo || !emailFrom) {
         return res.status(422).send({ error: 'All fields are required.' });
     }
 
     try {
-        // Get data from database
         const file = await File.findOne({ uuid });
         if (!file) {
             return res.status(404).send({ error: 'File not found.' });
@@ -67,17 +65,14 @@ router.post('/send', async (req, res) => {
         }
 
         file.sender = emailFrom;
-        file.receiver = emailTo; // Corrected assignment
+        file.receiver = emailTo; // Correct assignment
         await file.save();
 
-        // Construct the download URL
         const downloadUrl = `${process.env.APP_BASE_URL.replace(/\/+$/, '')}/files/download/${file.uuid}`;
         
-        // Log email details
         console.log(`Sending email to ${emailTo} from ${emailFrom}`);
         console.log(`Download URL: ${downloadUrl}`);
 
-        // Send Email
         await sendMail({
             from: emailFrom,
             to: emailTo,
@@ -86,7 +81,7 @@ router.post('/send', async (req, res) => {
             html: require('../services/emailTemplate')({
                 emailFrom,
                 download: downloadUrl,
-                size: parseInt(file.size / 1000) + ' KB',
+                size: `${parseInt(file.size / 1000)} KB`,
                 expires: '24 hours'
             })
         });
@@ -97,6 +92,5 @@ router.post('/send', async (req, res) => {
         return res.status(500).send({ error: 'Failed to send email.' });
     }
 });
-
 
 module.exports = router;
